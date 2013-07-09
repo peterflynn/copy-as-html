@@ -3,7 +3,7 @@
 Copy as HTML lets you copy code to the clipboard with full color syntax highlighting preserved (assuming you're pasting into
 something that supports HTML-formatted text, such as Outlook or GMail). Works with any language Brackets supports.
 
-To use, choose Edit > Copy as Colored HTML.  Due to runtime limitations, you still must explicitly press Ctrl+C on the next
+To use, choose _Edit > Copy as Colored HTML_.  Due to runtime limitations, you still must explicitly press Ctrl+C on the next
 screen to place the text onto the clipboard.
 
 

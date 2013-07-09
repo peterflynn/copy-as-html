@@ -83,9 +83,10 @@ define(function (require, exports, module) {
         var html = getHighlightedText(editor, range.start, range.end);
         
         
-        var fonts = "SourceCodePro, Consolas, \"Lucida Console\", \"Courier New\"";  // most users won't have SCP installed in the OS
+        var fonts = "SourceCodePro, Consolas, \"Lucida Console\", \"Courier New\"";  // fallback since most users won't have SCP installed in the OS
+        var bgColor = $(".CodeMirror-scroll").css("background-color");
         html = "Copy this text to the clipboard: " +
-            "<div style='cursor: auto; -webkit-user-select: text; font-family: " + fonts + "; font-size: 12px; line-height: 15px; overflow-x: auto; word-wrap: normal; white-space: pre; max-height: 500px; max-width: 800px'>" +
+            "<div style='cursor: auto; -webkit-user-select: text; background-color: " + bgColor + "; font-family: " + fonts + "; font-size: 12px; line-height: 15px; overflow-x: auto; word-wrap: normal; white-space: pre; max-height: 500px; max-width: 800px'>" +
             html + "</div>";
         
         Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "HTML Ready to Copy", "")
@@ -93,6 +94,10 @@ define(function (require, exports, module) {
         
         var $dialog = $(".modal.instance");
         $(".dialog-message", $dialog).html(html);
+        
+        // Bootstrap makes unhelpful assumptions about dialog height
+        $(".modal-body", $dialog).css("max-height", "none");
+        $dialog.css("margin-top",  "-" + ($dialog.height() / 2) + "px");
         
         // Pre-select the text so it's easy to copy
         // (Due to browser security restrictions, we can't programmatically modify the clipboard ourelves - user still has to
