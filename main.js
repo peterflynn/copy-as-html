@@ -49,23 +49,40 @@ define(function (require, exports, module) {
         var it = TokenUtils.getInitialContext(editor._codeMirror, pos);
         var lastLine = start.line;
         
-        var html = "<div>";
+        var html = "";
+        var lineHasText;
+        
+        function startLine() {
+            html += "<div>";
+            lineHasText = false;
+        }
+        function closeLine() {
+            if (!lineHasText) {
+                html += "&#8203;";  // zero-width space char to prop open line height
+            }
+            html += "</div>";
+        }
+        
+        startLine();
         
         while (TokenUtils.moveNextToken(it) && it.pos.line <= end.line) {
             if (it.pos.line !== lastLine) {
                 lastLine = it.pos.line;
-                html += "</div><div>";
+                closeLine();
+                startLine();
             }
             if (it.token.className) {
                 html += "<span class='cm-" + it.token.className + "'>" +
                         StringUtils.htmlEscape(it.token.string) + "</span>";
+                lineHasText = true;
             } else {
                 html += StringUtils.htmlEscape(it.token.string);
+                lineHasText = lineHasText || (it.token.string !== "");
             }
         }
-        html += "</div>";
+        closeLine();
         
-        return "<span class='cm-s-default'>" + html + "</span>";
+        return "<div class='cm-s-default'>" + html + "</div>";
     }
     
     
@@ -83,10 +100,10 @@ define(function (require, exports, module) {
         var html = getHighlightedText(editor, range.start, range.end);
         
         
-        var fonts = "SourceCodePro, Consolas, \"Lucida Console\", \"Courier New\"";  // fallback since most users won't have SCP installed in the OS
+        var fonts = "SourceCodePro, Consolas, \"Lucida Console\", \"Courier New\"";  // fallback fonts since other apps won't know what "SourceCodePro" is
         var bgColor = $(".CodeMirror-scroll").css("background-color");
         html = "Copy this text to the clipboard: " +
-            "<div style='cursor: auto; -webkit-user-select: text; background-color: " + bgColor + "; font-family: " + fonts + "; font-size: 12px; line-height: 15px; overflow-x: auto; word-wrap: normal; white-space: pre; max-height: 500px; max-width: 800px'>" +
+            "<div style='cursor: auto; -webkit-user-select: text; background-color: " + bgColor + "; font-family: " + fonts + "; font-size: 12px; line-height: 15px; overflow-x: auto; word-wrap: normal; white-space: pre; max-height: 500px; max-width: 800px; margin-top: 7px'>" +
             html + "</div>";
         
         Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "HTML Ready to Copy", "")
@@ -94,6 +111,10 @@ define(function (require, exports, module) {
         
         var $dialog = $(".modal.instance");
         $(".dialog-message", $dialog).html(html);
+        
+        if (brackets.platform === "win") {
+            $(".dialog-message").css("font-weight", "normal");  // work around #4391, thanks Chrome!
+        }
         
         // Bootstrap makes unhelpful assumptions about dialog height
         $(".modal-body", $dialog).css("max-height", "none");
