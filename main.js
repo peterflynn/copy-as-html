@@ -59,6 +59,7 @@ define(function (require, exports, module) {
         function closeLine() {
             if (!lineHasText) {
                 html += "&#8203;";  // zero-width space char to prop open line height
+                // TODO: could use line-height or min-height (set == to line-height) here instead?
             }
             html += "</div>";
         }
@@ -71,12 +72,16 @@ define(function (require, exports, module) {
                 closeLine();
                 startLine();
             }
+            
+            var lineText = StringUtils.htmlEscape(it.token.string);
+            lineText = lineText.replace(/ {2}/g, "&nbsp; ");  // PowerPoint collapses all ws runs > len 2 otherwise
+            
             if (it.token.className) {
                 html += "<span class='cm-" + it.token.className + "'>" +
-                        StringUtils.htmlEscape(it.token.string) + "</span>";
+                        lineText + "</span>";
                 lineHasText = true;
             } else {
-                html += StringUtils.htmlEscape(it.token.string);
+                html += lineText;
                 lineHasText = lineHasText || (it.token.string !== "");
             }
         }
