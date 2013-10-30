@@ -3,7 +3,7 @@
     "title": "Copy as HTML",
     "homepage": "https://github.com/peterflynn/copy-as-html",
     "author": "Peter Flynn",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "engines": { "brackets": ">=0.15" },
     "description": "Copy code to the clipboard with full color syntax highlighting preserved (assuming you're pasting into something that supports HTML-formatted text). To use, choose \"Edit > Copy as Colored HTML\"."
 }

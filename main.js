@@ -36,6 +36,11 @@ define(function (require, exports, module) {
         TokenUtils          = brackets.getModule("utils/TokenUtils"),
         StringUtils         = brackets.getModule("utils/StringUtils");
     
+    function _sprint() {
+        var versionStr = brackets.metadata.apiVersion || brackets.metadata.version;
+        return parseInt(versionStr.split(".")[1], 10);
+    }
+    
     
     /**
      * Returns the given range of code as static HTML text with the appropriate color-coding CSS classes
@@ -123,7 +128,9 @@ define(function (require, exports, module) {
         
         // Bootstrap makes unhelpful assumptions about dialog height
         $(".modal-body", $dialog).css("max-height", "none");
-        $dialog.css("margin-top",  "-" + ($dialog.height() / 2) + "px");
+        if (_sprint() < 33) {  // not needed in (and in fact broken by) Sprint 33
+            $dialog.css("margin-top",  "-" + ($dialog.height() / 2) + "px");
+        }
         
         // Pre-select the text so it's easy to copy
         // (Due to browser security restrictions, we can't programmatically modify the clipboard ourelves - user still has to
@@ -137,6 +144,5 @@ define(function (require, exports, module) {
     CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, showDialog);
     
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-    menu.addMenuDivider(Menus.LAST);
     menu.addMenuItem(CMD_COPY_HTML, null, Menus.AFTER, Commands.EDIT_COPY);
 });
