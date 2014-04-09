@@ -81,8 +81,8 @@ define(function (require, exports, module) {
             var lineText = StringUtils.htmlEscape(it.token.string);
             lineText = lineText.replace(/ {2}/g, "&nbsp; ");  // PowerPoint collapses all ws runs > len 2 otherwise
             
-            if (it.token.className) {
-                html += "<span class='cm-" + it.token.className + "'>" +
+            if (it.token.type) {
+                html += "<span class='cm-" + it.token.type + "'>" +
                         lineText + "</span>";
                 lineHasText = true;
             } else {
