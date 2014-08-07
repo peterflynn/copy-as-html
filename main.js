@@ -28,13 +28,13 @@ define(function (require, exports, module) {
     "use strict";
     
     // Brackets modules
-    var CommandManager      = brackets.getModule("command/CommandManager"),
+    var _                   = brackets.getModule("thirdparty/lodash"),
+        CommandManager      = brackets.getModule("command/CommandManager"),
         Commands            = brackets.getModule("command/Commands"),
         Menus               = brackets.getModule("command/Menus"),
         Dialogs             = brackets.getModule("widgets/Dialogs"),
         EditorManager       = brackets.getModule("editor/EditorManager"),
-        TokenUtils          = brackets.getModule("utils/TokenUtils"),
-        StringUtils         = brackets.getModule("utils/StringUtils");
+        TokenUtils          = brackets.getModule("utils/TokenUtils");
     
     
     /**
@@ -73,7 +73,7 @@ define(function (require, exports, module) {
                 startLine();
             }
             
-            var lineText = StringUtils.htmlEscape(it.token.string);
+            var lineText = _.escape(it.token.string);
             lineText = lineText.replace(/ {2}/g, "&nbsp; ");  // PowerPoint collapses all ws runs > len 2 otherwise
             
             if (it.token.type) {
@@ -92,7 +92,7 @@ define(function (require, exports, module) {
     
     
     function findThemeClass(editorDOMRoot) {
-        var classes = editorDOMRoot.className.split("");
+        var classes = editorDOMRoot.className.split(" ");
         var i;
         for (i = 0; i < classes.length; i++) {
             if (classes[i].indexOf("cm-s-") === 0) {
@@ -107,7 +107,7 @@ define(function (require, exports, module) {
     
     /** Opens a dialog containing the HTML-formatted text, ready for copying */
     function showDialog() {
-        var editor = EditorManager.getFocusedEditor();
+        var editor = EditorManager.getActiveEditor();
         var range;
         if (editor.hasSelection()) {
             range = editor.getSelection();
