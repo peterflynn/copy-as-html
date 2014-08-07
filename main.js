@@ -36,11 +36,6 @@ define(function (require, exports, module) {
         TokenUtils          = brackets.getModule("utils/TokenUtils"),
         StringUtils         = brackets.getModule("utils/StringUtils");
     
-    function _sprint() {
-        var versionStr = brackets.metadata.apiVersion || brackets.metadata.version;
-        return parseInt(versionStr.split(".")[1], 10);
-    }
-    
     
     /**
      * Returns the given range of code as static HTML text with the appropriate color-coding CSS classes
@@ -92,7 +87,21 @@ define(function (require, exports, module) {
         }
         closeLine();
         
-        return "<div class='cm-s-default'>" + html + "</div>";
+        return html;
+    }
+    
+    
+    function findThemeClass(editorDOMRoot) {
+        var classes = editorDOMRoot.className.split("");
+        var i;
+        for (i = 0; i < classes.length; i++) {
+            if (classes[i].indexOf("cm-s-") === 0) {
+                return classes[i];
+            }
+        }
+        
+        console.error("Error: No theme classname found on editor", editorDOMRoot);
+        return "";
     }
     
     
@@ -109,12 +118,10 @@ define(function (require, exports, module) {
         
         var html = getHighlightedText(editor, range.start, range.end);
         
-        
-        var fonts = "SourceCodePro, Consolas, \"Lucida Console\", \"Courier New\"";  // fallback fonts since other apps won't know what "SourceCodePro" is
-        var bgColor = $(".CodeMirror-scroll").css("background-color");
+        // Wrap in divs that stand in for '#editor-holder' & '.CodeMirror' since some theme selectors reference them
         html = "Copy this text to the clipboard: " +
-            "<div style='cursor: auto; -webkit-user-select: text; background-color: " + bgColor + "; font-family: " + fonts + "; font-size: 12px; line-height: 15px; overflow-x: auto; word-wrap: normal; white-space: pre; max-height: 500px; max-width: 800px; margin-top: 7px'>" +
-            html + "</div>";
+            "<div id='editor-holder'><div class='copyHtml-cmStandIn' style='cursor: auto; -webkit-user-select: text; line-height: 1.25; overflow-x: auto; word-wrap: normal; white-space: pre; max-height: 500px; max-width: 800px; margin-top: 7px'>" +
+            html + "</div></div>";
         
         Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "HTML Ready to Copy", "")
             .done(function () { EditorManager.focusEditor(); });
@@ -122,15 +129,33 @@ define(function (require, exports, module) {
         var $dialog = $(".modal.instance");
         $(".dialog-message", $dialog).html(html);
         
+        // Copy theme class from editor's .CodeMirror div to our standin div
+        var $cmStandin = $(".copyHtml-cmStandIn", $dialog);
+        $cmStandin.addClass(findThemeClass(editor.getRootElement()));
+        
+        // Some theme CSS hangs off of .CodeMirror, but that brings with it a bunch of undesirable styles too, so rather than place
+        // a fake '.CodeMirror' div here, we 'manually' copy over the important theme attributes to a standin div
+        var $cmSample = $(".CodeMirror-scroll");
+        var bgColor = $cmSample.css("background-color"),
+            fgColor = $cmSample.css("color"),
+            fonts = $cmSample.css("font-family"),
+            fontSize = $cmSample.css("font-size");
+        if (fonts.indexOf("SourceCodePro") === 0) {
+            fonts = "SourceCodePro, Consolas, \"Lucida Console\", \"Courier New\"";  // ensure fallback fonts since other apps won't know what "SourceCodePro" is
+        }
+        $cmStandin.css({
+            backgroundColor: bgColor,
+            color: fgColor,
+            fontFamily: fonts,
+            fontSize: fontSize
+        });
+        
         if (brackets.platform === "win") {
             $(".dialog-message").css("font-weight", "normal");  // work around #4391, thanks Chrome!
         }
         
         // Bootstrap makes unhelpful assumptions about dialog height
         $(".modal-body", $dialog).css("max-height", "none");
-        if (_sprint() < 33) {  // not needed in (and in fact broken by) Sprint 33
-            $dialog.css("margin-top",  "-" + ($dialog.height() / 2) + "px");
-        }
         
         // Pre-select the text so it's easy to copy
         // (Due to browser security restrictions, we can't programmatically modify the clipboard ourelves - user still has to

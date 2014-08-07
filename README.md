@@ -6,6 +6,8 @@ supports HTML-formatted text, such as Outlook or GMail). Works with any language
 To use, choose _Edit > Copy as Colored HTML_.  Due to runtime limitations, you still must explicitly press Ctrl+C on the next
 screen to place the text onto the clipboard.
 
+If you have some text selected, you'll get just that text. If you have no selection, you'll get the entire file.
+
 
 How to Install
 ==============
