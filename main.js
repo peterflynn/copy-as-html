@@ -75,11 +75,15 @@ define(function (require, exports, module) {
             
             var lineText = _.escape(it.token.string);
             lineText = lineText.replace(/ {2}/g, "&nbsp; ");  // PowerPoint collapses all ws runs > len 2 otherwise
-            
+
             if (it.token.type) {
-                html += "<span class='cm-" + it.token.type + "'>" +
-                        lineText + "</span>";
-                lineHasText = true;
+				var classes = it.token.type.split(" ");
+				html += "<span class='";
+				for (i = 0; i < classes.length; i++) {
+					html += (i > 0 ? " cm-" : "cm-") + classes[i];
+				}
+				html += "'>" + lineText + "</span>";
+				lineHasText = true;
             } else {
                 html += lineText;
                 lineHasText = lineHasText || (it.token.string !== "");
@@ -94,6 +98,7 @@ define(function (require, exports, module) {
     function findThemeClass(editorDOMRoot) {
         var classes = editorDOMRoot.className.split(" ");
         var i;
+		
         for (i = 0; i < classes.length; i++) {
             if (classes[i].indexOf("cm-s-") === 0) {
                 return classes[i];
@@ -131,7 +136,9 @@ define(function (require, exports, module) {
         
         // Copy theme class from editor's .CodeMirror div to our standin div
         var $cmStandin = $(".copyHtml-cmStandIn", $dialog);
-        $cmStandin.addClass(findThemeClass(editor.getRootElement()));
+		
+		// QUESTION: This makes no longer a difference in Brackets 1.3. I'm not sure for what reason it's here exactly, but I recommend to delete this row
+		$cmStandin.addClass(findThemeClass(editor.getRootElement()));
         
         // Some theme CSS hangs off of .CodeMirror, but that brings with it a bunch of undesirable styles too, so rather than place
         // a fake '.CodeMirror' div here, we 'manually' copy over the important theme attributes to a standin div
@@ -167,7 +174,7 @@ define(function (require, exports, module) {
     // Expose in UI
     var CMD_COPY_HTML = "pflynn.copy-as-html";
     CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, showDialog);
-    
+
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuItem(CMD_COPY_HTML, null, Menus.AFTER, Commands.EDIT_COPY);
 });
