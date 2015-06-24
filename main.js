@@ -44,6 +44,9 @@ define(function (require, exports, module) {
      * @param {{line:number, ch:number}} end
      * @return {string}
      */
+    
+    var addLineNumber;
+    
     function getHighlightedText(editor, start, end) {
         var pos = { line: start.line, ch: 0 };
         var it = TokenUtils.getInitialContext(editor._codeMirror, pos);
@@ -52,8 +55,12 @@ define(function (require, exports, module) {
         var html = "";
         var lineHasText;
         
-        function startLine() {
+        function startLine(line) {
             html += "<div>";
+            // adds line number followed by a tab at the beginning of the line. This will be styled like a comment.
+            if (addLineNumber) {
+                html += "<span class='cm-comment'>" + line.toString() + "&#09;</span>";
+            }
             lineHasText = false;
         }
         function closeLine() {
@@ -64,13 +71,13 @@ define(function (require, exports, module) {
             html += "</div>";
         }
         
-        startLine();
+        startLine(pos.line + 1);
         
         while (TokenUtils.moveNextToken(it) && it.pos.line <= end.line) {
             if (it.pos.line !== lastLine) {
                 lastLine = it.pos.line;
                 closeLine();
-                startLine();
+                startLine(it.pos.line + 1);
             }
             
             var lineText = _.escape(it.token.string);
@@ -165,9 +172,20 @@ define(function (require, exports, module) {
     
     
     // Expose in UI
-    var CMD_COPY_HTML = "pflynn.copy-as-html";
-    CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, showDialog);
     
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
+    
+    var CMD_COPY_HTML_LN = "pflynn.copy-as-html-with-line-number";
+    CommandManager.register("Copy as Colored HTML w. line n°", CMD_COPY_HTML_LN, function () {
+        addLineNumber = true;
+        showDialog();
+    });
+    menu.addMenuItem(CMD_COPY_HTML_LN, null, Menus.AFTER, Commands.EDIT_COPY);
+    
+    var CMD_COPY_HTML = "pflynn.copy-as-html";
+    CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, function () {
+        addLineNumber = false;
+        showDialog();
+    });
     menu.addMenuItem(CMD_COPY_HTML, null, Menus.AFTER, Commands.EDIT_COPY);
 });
