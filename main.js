@@ -44,7 +44,10 @@ define(function (require, exports, module) {
      * @param {{line:number, ch:number}} end
      * @return {string}
      */
-    function getHighlightedText(editor, start, end, addLineNumber) {
+    
+    var addLineNumber;
+    
+    function getHighlightedText(editor, start, end) {
         var pos = { line: start.line, ch: 0 };
         var it = TokenUtils.getInitialContext(editor._codeMirror, pos);
         var lastLine = start.line;
@@ -110,7 +113,7 @@ define(function (require, exports, module) {
     
     
     /** Opens a dialog containing the HTML-formatted text, ready for copying */
-    function showDialog(addLineNumber) {
+    function showDialog() {
         var editor = EditorManager.getActiveEditor();
         var range;
         if (editor.hasSelection()) {
@@ -120,7 +123,7 @@ define(function (require, exports, module) {
                      end: {line: editor.getLastVisibleLine() + 1, ch: 0}};
         }
         
-        var html = getHighlightedText(editor, range.start, range.end, addLineNumber);
+        var html = getHighlightedText(editor, range.start, range.end);
         
         // Wrap in divs that stand in for '#editor-holder' & '.CodeMirror' since some theme selectors reference them
         html = "Copy this text to the clipboard: " +
@@ -169,13 +172,20 @@ define(function (require, exports, module) {
     
     
     // Expose in UI
+    
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-     
+    
     var CMD_COPY_HTML_LN = "pflynn.copy-as-html-with-line-number";
-    CommandManager.register("Copy as Colored HTML w. line n°", CMD_COPY_HTML_LN, function () { showDialog(true); });
+    CommandManager.register("Copy as Colored HTML w. line n°", CMD_COPY_HTML_LN, function () {
+        addLineNumber = true;
+        showDialog();
+    });
     menu.addMenuItem(CMD_COPY_HTML_LN, null, Menus.AFTER, Commands.EDIT_COPY);
     
     var CMD_COPY_HTML = "pflynn.copy-as-html";
-    CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, showDialog);
+    CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, function () {
+        addLineNumber = false;
+        showDialog();
+    });
     menu.addMenuItem(CMD_COPY_HTML, null, Menus.AFTER, Commands.EDIT_COPY);
 });
