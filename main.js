@@ -44,7 +44,7 @@ define(function (require, exports, module) {
      * @param {{line:number, ch:number}} end
      * @return {string}
      */
-    function getHighlightedText(editor, start, end) {
+    function getHighlightedText(editor, start, end, addLineNumber) {
         var pos = { line: start.line, ch: 0 };
         var it = TokenUtils.getInitialContext(editor._codeMirror, pos);
         var lastLine = start.line;
@@ -52,8 +52,12 @@ define(function (require, exports, module) {
         var html = "";
         var lineHasText;
         
-        function startLine() {
+        function startLine(line) {
             html += "<div>";
+            // adds line number followed by a tab at the beginning of the line. This will be styled like a comment.
+            if (addLineNumber) {
+                html += "<span class='cm-comment'>" + line.toString() + "&#09;</span>";
+            }
             lineHasText = false;
         }
         function closeLine() {
@@ -64,13 +68,13 @@ define(function (require, exports, module) {
             html += "</div>";
         }
         
-        startLine();
+        startLine(pos.line + 1);
         
         while (TokenUtils.moveNextToken(it) && it.pos.line <= end.line) {
             if (it.pos.line !== lastLine) {
                 lastLine = it.pos.line;
                 closeLine();
-                startLine();
+                startLine(it.pos.line + 1);
             }
             
             var lineText = _.escape(it.token.string);
@@ -106,7 +110,7 @@ define(function (require, exports, module) {
     
     
     /** Opens a dialog containing the HTML-formatted text, ready for copying */
-    function showDialog() {
+    function showDialog(addLineNumber) {
         var editor = EditorManager.getActiveEditor();
         var range;
         if (editor.hasSelection()) {
@@ -116,7 +120,7 @@ define(function (require, exports, module) {
                      end: {line: editor.getLastVisibleLine() + 1, ch: 0}};
         }
         
-        var html = getHighlightedText(editor, range.start, range.end);
+        var html = getHighlightedText(editor, range.start, range.end, addLineNumber);
         
         // Wrap in divs that stand in for '#editor-holder' & '.CodeMirror' since some theme selectors reference them
         html = "Copy this text to the clipboard: " +
@@ -165,9 +169,13 @@ define(function (require, exports, module) {
     
     
     // Expose in UI
+    var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
+     
+    var CMD_COPY_HTML_LN = "pflynn.copy-as-html-with-line-number";
+    CommandManager.register("Copy as Colored HTML w. line n°", CMD_COPY_HTML_LN, function () { showDialog(true); });
+    menu.addMenuItem(CMD_COPY_HTML_LN, null, Menus.AFTER, Commands.EDIT_COPY);
+    
     var CMD_COPY_HTML = "pflynn.copy-as-html";
     CommandManager.register("Copy as Colored HTML", CMD_COPY_HTML, showDialog);
-    
-    var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuItem(CMD_COPY_HTML, null, Menus.AFTER, Commands.EDIT_COPY);
 });
